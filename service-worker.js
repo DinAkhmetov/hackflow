@@ -1,4 +1,4 @@
-const CACHE='hackflow-v31';
+const CACHE='hackflow-v32';
 const ASSETS=['./','./index.html','./style.css','./university-list.js','./auth.js','./app.js','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{

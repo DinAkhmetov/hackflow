@@ -235,7 +235,7 @@ const save=()=>localStorage.setItem(STORE,JSON.stringify(data));
 if(needsDemoMigration||madeCreatedHackathonsPublic)save();
 const me=()=>data.users.find(u=>u.id===data.currentUserId);
 function syncSupabaseUser(authUser){
- if(!authUser?.id||!authUser.email)throw new Error('В аккаунте Supabase не указан адрес электронной почты.');
+ if(!authUser?.id||!authUser.email)throw new Error('В аккаунте не указан адрес электронной почты.');
  const metadata=authUser.user_metadata||{},email=authUser.email.toLowerCase();
  const profileValue=(key,fallback='')=>typeof metadata[key]==='string'&&metadata[key].trim()?metadata[key].trim():fallback;
  let user=data.users.find(candidate=>candidate.id===authUser.id);
@@ -460,14 +460,14 @@ function auth(){
  $('.top').hidden=true;
  $main().innerHTML=`<section class="auth-wrap"><div class="auth-card">
   <div class="logo"><i>⚡</i>HackFlow</div><h1>${register?'Создать аккаунт':'Войти в HackFlow'}</h1>
-  <p class="mu">Аккаунт защищён Supabase Auth. Данные хакатонов в этой демо-версии хранятся в браузере.</p>
+  <p class="mu">Аккаунт защищён сервисом авторизации. Данные хакатонов в этой демо-версии хранятся в браузере.</p>
   <form id="auth-form">
   ${register?`<div class="fld"><label for="auth-role">Тип аккаунта</label><select id="auth-role" name="role"><option value="participant">Участник</option><option value="expert">Эксперт</option><option value="mentor">Ментор</option></select></div>
    <div class="form-grid"><div class="fld"><label for="auth-first-name">Имя</label><input id="auth-first-name" name="firstName" required autocomplete="given-name"></div><div class="fld"><label for="auth-last-name">Фамилия</label><input id="auth-last-name" name="lastName" required autocomplete="family-name"></div></div>
    <div id="participant-fields"><div class="form-grid"><div class="fld"><label for="auth-university">Университет</label><div class="university-picker"><input id="auth-university" name="university" role="combobox" aria-autocomplete="list" aria-controls="university-options" aria-describedby="university-status" aria-expanded="false" required autocomplete="off" placeholder="Начните вводить название"><div id="university-options" class="university-options" role="listbox" hidden></div></div><small id="university-status" class="mu university-status" aria-live="polite"></small></div><div class="fld"><label for="auth-faculty">Факультет</label><input id="auth-faculty" name="faculty" required autocomplete="organization-title"></div></div><div class="fld"><label for="auth-group">Группа</label><input id="auth-group" name="group" required autocomplete="off" placeholder="Введите группу"></div></div>
    <div id="expert-fields" hidden><div class="fld"><label for="auth-organization">Организация</label><input id="auth-organization" name="organization"></div><div class="fld"><label for="auth-about">О себе</label><textarea id="auth-about" name="about" rows="4" maxlength="1200" placeholder="Опыт, специализация и темы, в которых вы можете оценивать проекты"></textarea></div><p class="mu">После регистрации аккаунт эксперта готов к работе. Для оценки хакатона потребуется принять приглашение его организатора.</p></div>`:''}
    <div class="fld"><label for="auth-email">Электронная почта</label><input id="auth-email" name="email" type="email" required autocomplete="email"></div>
-   <div class="fld"><label for="auth-password">Пароль</label><input id="auth-password" name="password" type="password" minlength="6" required autocomplete="${register?'new-password':'current-password'}"></div>
+   <div class="fld"><label for="auth-password">Пароль</label><input id="auth-password" name="password" type="password" minlength="8" required autocomplete="${register?'new-password':'current-password'}"></div>
   <div class="err" id="auth-error" role="alert"></div><button class="btn" id="auth-submit" type="submit">${register?'Зарегистрироваться':'Войти'}</button>
   </form>
  <button class="text-btn" data-a="auth-toggle">${register?'Уже есть аккаунт? Войти':'Создать аккаунт'}</button>
@@ -512,25 +512,25 @@ function auth(){
   if(role==='participant'&&(!faculty||!group)){$('#auth-error').textContent='Укажите факультет и группу.';return}
   if(role!=='participant'&&!organization){$('#auth-error').textContent='Укажите организацию.';return}
   if(role==='expert'&&!about){$('#auth-error').textContent='Заполните поле «О себе».';return}
-   if(!window.hackflowSupabase){errorBox.textContent='Не удалось подключиться к Supabase. Обновите страницу и попробуйте снова.';return}
+   if(!window.hackflowSupabase){errorBox.textContent='Не удалось подключиться к сервису авторизации. Обновите страницу и попробуйте снова.';return}
    submitButton.disabled=true;
    try{
     const {data:result,error}=await window.hackflowSupabase.auth.signUp({email,password,options:{data:{firstName,lastName,role,university,faculty,group,organization,about}}});
     if(error)throw error;
     if(result.session&&result.user){const user=syncSupabaseUser(result.user);data.currentUserId=user.id;save();afterLogin()}
     else{errorBox.textContent='Регистрация прошла успешно. Проверьте почту и подтвердите адрес, затем войдите.';errorBox.classList.add('success')}
-   }catch(error){console.error('Не удалось зарегистрировать аккаунт Supabase:',error);errorBox.textContent=error.message||'Не удалось зарегистрироваться. Попробуйте позже.'}
+   }catch(error){console.error('Не удалось зарегистрировать аккаунт:',error);errorBox.textContent=error.message||'Не удалось зарегистрироваться. Попробуйте позже.'}
    finally{if(submitButton.isConnected)submitButton.disabled=false}
    return;
   }
-   if(!window.hackflowSupabase){errorBox.textContent='Не удалось подключиться к Supabase. Обновите страницу и попробуйте снова.';return}
+   if(!window.hackflowSupabase){errorBox.textContent='Не удалось подключиться к сервису авторизации. Обновите страницу и попробуйте снова.';return}
    submitButton.disabled=true;
    try{
     const {data:result,error}=await window.hackflowSupabase.auth.signInWithPassword({email,password});
     if(error)throw error;
-    if(!result.user)throw new Error('Supabase не вернул данные аккаунта.');
+    if(!result.user)throw new Error('Сервис авторизации не вернул данные аккаунта.');
     const user=syncSupabaseUser(result.user);data.currentUserId=user.id;save();afterLogin();
-   }catch(error){console.error('Не удалось войти через Supabase:',error);errorBox.textContent=error.message||'Не удалось войти. Проверьте почту и пароль.'}
+   }catch(error){console.error('Не удалось войти в аккаунт:',error);errorBox.textContent=error.message||'Не удалось войти. Проверьте почту и пароль.'}
    finally{if(submitButton.isConnected)submitButton.disabled=false}
  };
 }
@@ -819,7 +819,7 @@ V.profile=()=>{
    <h3 class="palette-mode-title">Вариант оформления</h3><div class="palette-modes" role="group" aria-label="Вариант оформления">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в системе']].map(([mode,label])=>`<button type="button" class="palette-mode ${data.paletteMode===mode?'selected':''}" data-a="set-palette-mode" data-mode="${mode}" aria-pressed="${data.paletteMode===mode}">${label}</button>`).join('')}</div>
    <button type="button" class="palette-reset ${data.palette==='auto'&&data.paletteMode==='auto'?'selected':''}" data-a="set-palette" data-palette="auto" aria-pressed="${data.palette==='auto'&&data.paletteMode==='auto'}">Использовать системное оформление</button>
   </section>
-  <p class="mu">Вход выполняется через Supabase Auth; данные профиля и пространства демо хранятся локально в этом браузере.</p>
+  <p class="mu">Данные профиля и пространства демо хранятся локально в этом браузере.</p>
   ${invitations.length?`<h2>Приглашения в команду</h2>${invitations.map(i=>`<div class="invite-row"><span>«${esc(i.teamName)}» · ${esc(CAT[i.hack]?.t||'')}</span>${registrationIsOpen(i.hack)?`<button class="btn" data-a="accept-invite" data-team="${esc(i.teamId)}">Принять</button>`:'<span class="bd b-nu">Срок приглашения истёк</span>'}</div>`).join('')}`:''}
   <button class="btn sec" data-a="logout">Выйти из аккаунта</button></div>`;
 };
@@ -1055,8 +1055,8 @@ const A={
  },
  'set-palette'({palette}){if(palette!=='auto'&&!PALETTES.some(item=>item.id===palette))return;data.palette=palette;if(palette==='auto')data.paletteMode='auto';applyPalette();save();V.profile()},
  'set-palette-mode'({mode}){if(!['auto','light','dark'].includes(mode))return;data.paletteMode=mode;applyPalette();save();V.profile()},
- async demo({id}){if(!data.users.some(user=>user.id===id))return;if(window.hackflowSupabase){const {error}=await window.hackflowSupabase.auth.signOut();if(error){console.error('Не удалось завершить сессию Supabase перед демо-входом:',error);toast('Не удалось переключиться на демо-аккаунт. Попробуйте снова.');return}}data.currentUserId=id;save();afterLogin()},
- async logout(){if(window.hackflowSupabase){const {error}=await window.hackflowSupabase.auth.signOut();if(error){console.error('Не удалось завершить сессию Supabase:',error);toast('Не удалось выйти из аккаунта. Попробуйте снова.');return}}data.currentUserId=null;save();authMode='login';view='home';render()},
+ async demo({id}){if(!data.users.some(user=>user.id===id))return;if(window.hackflowSupabase){const {error}=await window.hackflowSupabase.auth.signOut();if(error){console.error('Не удалось завершить предыдущую сессию перед демо-входом:',error);toast('Не удалось переключиться на демо-аккаунт. Попробуйте снова.');return}}data.currentUserId=id;save();afterLogin()},
+ async logout(){if(window.hackflowSupabase){const {error}=await window.hackflowSupabase.auth.signOut();if(error){console.error('Не удалось завершить сессию аккаунта:',error);toast('Не удалось выйти из аккаунта. Попробуйте снова.');return}}data.currentUserId=null;save();authMode='login';view='home';render()},
  invite(){const team=currentTeam(),email=$('#invite-email').value.trim().toLowerCase(),error=$('#invite-error');if(!team){error.textContent='Командное пространство недоступно.';return}if(!registrationIsOpen(team.hack)){error.textContent='Срок регистрации в этом хакатоне завершён. Приглашать участников больше нельзя.';return}const user=data.users.find(u=>u.email.toLowerCase()===email);if(!email){error.textContent='Укажите почту участника.';return}if(!user){error.textContent='Участник должен сначала войти в HackFlow на этом устройстве.';return}if(user.role!=='participant'||!user.verified){error.textContent='Приглашать в команду можно только подтверждённые аккаунты участников.';return}if(team.memberIds.includes(user.id)){error.textContent='Этот пользователь уже в команде.';return}if(data.invites.some(i=>i.teamId===team.id&&i.email===email&&!i.accepted)){error.textContent='Приглашение уже отправлено.';return}data.invites.push({email,teamId:team.id,teamName:team.name,hack:team.hack,accepted:false});notifyUsers(`Вас пригласили в команду «${team.name}».`,[user.id],{type:'team',detail:`Команда «${team.name}» на хакатоне «${CAT[team.hack]?.t||'Хакатон'}» отправила вам приглашение.\n${teamComposition(team)}\nОткройте личный кабинет, чтобы принять его.`,hackId:team.hack,teamId:team.id,section:'team'});save();toast('Приглашение отправлено.');V.team()},
  transfer(){const team=currentTeam(),next=$('#new-captain').value;if(!team||!team.memberIds.includes(next))return;team.captainId=next;notifyUsers(`Капитаном команды «${team.name}» назначен ${data.users.find(u=>u.id===next)?.name}.`,team.memberIds,{type:'team',detail:`Капитаном команды «${team.name}» назначен ${data.users.find(u=>u.id===next)?.name}.`,hackId:team.hack,teamId:team.id,section:'team'});save();toast('Капитан команды изменён.');nav();V.team()},
  'accept-invite'({team}){const invite=data.invites.find(i=>i.teamId===team&&i.email===me().email.toLowerCase()&&!i.accepted),target=data.teams.find(t=>t.id===team);if(!invite||!target)return;if(me().role!=='participant'){toast('В команду могут вступить только участники.');return}if(!registrationIsOpen(target.hack)){toast('Срок регистрации в этом хакатоне завершён. Приглашение нельзя принять.');V.profile();return}if(data.teams.some(t=>t.hack===target.hack&&t.memberIds.includes(me().id))){toast('Вы уже состоите в команде этого хакатона.');return}target.memberIds.push(me().id);invite.accepted=true;if(target.status==='active')data.selectedTeamByUser[me().id]=target.id;notifyUsers(`${me().name} присоединился(ась) к команде «${target.name}».`,target.memberIds.filter(id=>id!==me().id),{type:'team',detail:`${me().name} присоединился(ась) к команде «${target.name}» на хакатоне «${CAT[target.hack]?.t||'Хакатон'}».`,hackId:target.hack,teamId:target.id,section:'team'});save();toast(`Добро пожаловать в команду «${target.name}»!`);V.profile()},
@@ -1159,7 +1159,7 @@ async function initializeAuth(){
    const {data:result,error}=await window.hackflowSupabase.auth.getSession();
    if(error)throw error;
    if(result.session?.user){const user=syncSupabaseUser(result.session.user);data.currentUserId=user.id;save()}
-  }catch(error){console.error('Не удалось восстановить сессию Supabase:',error)}
+  }catch(error){console.error('Не удалось восстановить сессию аккаунта:',error)}
  }
  render();
 }
